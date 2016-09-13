@@ -52,7 +52,8 @@ protection from losing your notebook if Mathematica crashes. *Backup* provides t
   
 ## Installation
 
-  Download the source code (zip or tar.gz) from the release page and extract it with `unzip` or `tar xf`. The extracted  directory
+  Download the source code (zip or tar.gz) from the [release page](https://github.com/ahnorton/Backup-mathematica/releases)
+  and extract it (`unzip` or `tar xf`). The extracted  directory
   will have a name like "Backup-mathematica-x.x.x". Rename this directory as "Backup" and move it into one of the following
   directories (evaluate these expressions in Mathematica),
 
