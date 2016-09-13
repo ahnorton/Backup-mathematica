@@ -52,11 +52,13 @@ protection from losing your notebook if Mathematica crashes. *Backup* provides t
   
 ## Installation
 
-  Download and unzip [Backup.zip](). Move the directory "Backup" into either of the directories returned by evaluating 
+  Download the latest .zip from the [release page](https://github.com/ahnorton/Backup-mathematica/releases),
+  then `unzip Backup-x.x.x.zip`. Move the extracted directory "Backup" into either one of these directories
+  (evaluate these expressions in Mathematica),
 
-          FileNameJoin[{$UserBaseDirectory, "Applications"}]      (single user installation)
+          FileNameJoin[{$UserBaseDirectory, "Applications"}]      (for single user installation)
 
-          FileNameJoin[{$BaseDirectory, "Applications"}]          (system wide installation) 
+          FileNameJoin[{$BaseDirectory, "Applications"}]          (for system wide installation) 
            
   On Linux, these are typically  "/home/*username*/.Mathematica/Applications" and  "/usr/share/Mathematica/Applications".
 
@@ -99,5 +101,5 @@ protection from losing your notebook if Mathematica crashes. *Backup* provides t
     You should have received a copy of the GNU General Public License
     along with Backup. If not, see <http://www.gnu.org/licenses/>.
 
-Email: norton.ah@gmail.com
-
+norton.ah@gmail.com <br>
+https://github.com/ahnorton/Backup-mathematica
