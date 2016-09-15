@@ -110,25 +110,32 @@ DeleteLockFile::usage="DeleteLockFile[ ]  can be used to delete the file  ./<nam
 
 
 (* ::Input::Initialization:: *)
+BackupRunningQ::usage="BackupRunningQ[\[VeryThinSpace]nb\[VeryThinSpace]]  returns True if there are scheduled backups running for the notebook object nb, 
+that were started from EvaluationNotebook[ ]. It returns False otherwise. 
+
+BackupRunningQ[ ]  is short for  BackupRunningQ[ EvaluationNotebook[ ] ]. ";
+
+
+(* ::Input::Initialization:: *)
 If[!TrueQ[Global`$EditModeForBackup],Begin["`Private`"]];
 
 
 (* ::Input::Initialization:: *)
 StopBackup[]:=StopBackup[EvaluationNotebook[]]
 StopBackup[nb_]:=Module[{msg,dir},
+dir=StringReplace[NotebookFileName[nb],".nb"->"_bak"<>$PathnameSeparator];
+If[!FileExistsQ[dir],msg="The backup directory could not be found. Perhaps backup failed to start?"; Return[msg]];
+If[BackupRunningQ[nb],
 Quiet[RemoveScheduledTask[task[1,nb]]];
 Quiet[RemoveScheduledTask[task[2,nb]]];
 Quiet[RemoveScheduledTask[task[3,nb]]];
 Quiet[RemoveScheduledTask[task[4,nb]]];
 Quiet[RemoveScheduledTask[task[5,nb]]];
-dir=StringReplace[NotebookFileName[nb],".nb"->"_bak"<>$PathnameSeparator];
-If[!FileExistsQ[dir],msg="The backup directory could not be found. Perhaps backup failed to start?"; Return[msg]];
-If[TrueQ[LockedBackupDir[nb]],msg="The backup directory is locked. 
-If backup is not running from another copy of this notebook, then use DeleteLockFile[ ]\[VeryThinSpace].";Return[msg]];
-Quiet[DeleteFile[dir<>"Locked"]];
-If[!TrueQ[BackupRunning[nb]],msg="Nothing done: Backup was not running."];
-If[TrueQ[BackupRunning[nb]],msg="Backup stopped."];
-BackupRunning[nb]=False;
+DeleteFile[dir<>"Locked"];
+msg="Backup stopped.";
+BackupRunningQ[nb]:=False;
+,
+msg="Nothing done: Backup was not running."];
 msg]
 
 
@@ -136,10 +143,23 @@ msg]
 DeleteLockFile[] :=DeleteLockFile[EvaluationNotebook[]] 
 DeleteLockFile[nb_] :=Module[{msg,dir},
 dir=StringReplace[NotebookFileName[nb],".nb"->"_bak"<>$PathnameSeparator];
-If[TrueQ[BackupRunning],msg="The lock-file can not be deleted while backup is running. Use StopBackup[ ].";Return[msg]];
+If[TrueQ[BackupRunningQ[nb]],msg="The lock-file can not be deleted while backup is running. Use StopBackup[ ].";Return[msg]];
 If[!FileExistsQ[dir<>"Locked"],msg="No lock-file was found.";Return[msg]];
-If[TrueQ[LockedBackupDir[nb]],DeleteFile[dir<>"Locked"];LockedBackupDir[nb]=False;msg="The lock-file has been deleted.";Return[msg]];
+If[LockedBackupQ[nb],DeleteFile[dir<>"Locked"];msg="The lock-file has been deleted.";Return[msg]];
 ]
+
+
+(* ::Input::Initialization:: *)
+BackupRunningQ[_]:=False
+BackupRunningQ[]:=BackupRunningQ[EvaluationNotebook[]] 
+
+
+(* ::Input::Initialization:: *)
+LockedBackupQ[_]:=False
+LockedBackupQ[]:=LockedBackupQ[EvaluationNotebook[]] 
+LockedBackupQ[nb_]:=Module[{dir},
+dir=StringReplace[NotebookFileName[nb],".nb"->"_bak"<>$PathnameSeparator];
+FileExistsQ[dir<>"Locked"]]
 
 
 (* ::Input::Initialization:: *)
@@ -171,7 +191,7 @@ debug=False;
 Clear[StartBackup]
 StartBackup[]:=StartBackup[EvaluationNotebook[]]
 StartBackup[nb_]:=Module[{msg,nbfile,base,dir,fn,fnsession,minute},
-If[TrueQ[BackupRunning[nb]],
+If[TrueQ[BackupRunningQ[nb]],
 msg="Nothing done: Backup is already running.";
 Return[msg]
 ];
@@ -181,11 +201,9 @@ base=FileBaseName[nbfile];
 dir=StringReplace[nbfile,".nb"->"_bak"<>$PathnameSeparator];
 fn=dir<>base<>"_";
 If[!DirectoryQ[dir],CreateDirectory[dir];TimeZero[dir]];
-If[FileExistsQ[dir<>"Locked"],
-LockedBackupDir[nb] = True;
+If[LockedBackupQ[nb],
 Print[LockedMsg[nbfile]];
 Return[], 
-LockedBackupDir[nb] = False;
 Export[dir<>"Locked",
 {"The existence of this lock-file causes StartBackup[] to abort.",
 "Normally  StopBackup[]  is used to delete this file.",
@@ -206,7 +224,7 @@ task[2,nb]=RunScheduledTask[min15Task[fn,nbfile],15minute,StartTime[dir,15minute
 task[3,nb]=RunScheduledTask[hourlyTask[fn,nbfile],60minute,StartTime[dir,60minute]];
 task[4,nb]=RunScheduledTask[dailyTask[fn,nbfile],   24*60minute,StartTime[dir,24*60minute ]];
 task[5,nb]=RunScheduledTask[monthlyTask[fn,nbfile],31*24*60minute,StartTime[dir,31*24*60minute]];
-BackupRunning[nb]=True;
+BackupRunningQ[nb]:=True;
 msg="Backup started."
 ]
 
